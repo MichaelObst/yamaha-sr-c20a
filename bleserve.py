@@ -49,7 +49,7 @@ def BleServer(pill2kill):
         try:
             adapter.start(reset_on_start=False) #Setting to True requires sudo but may be more stable
             device = adapter.connect(DEVICEADDR, timeout=5.0)
-            device.subscribe_handle(UUID, callback=handle_data)
+            device.subscribe(UUID, callback=handle_data)
             #Below did happen on reverse engineering but doesn't seem necessary to establish connection
             #logger.info("Sending Init")
             #device.char_write_handle(INIT_HANDLE, bytearray([1,0]), wait_for_response=True)
