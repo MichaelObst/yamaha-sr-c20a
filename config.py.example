@@ -1,0 +1,26 @@
+#Contains global variables to import into others with import config
+
+from queue import Queue
+import time
+import logging
+from yam import *
+
+logger = logging.getLogger(__name__)
+
+DEVICEADDR = "00:19:01:c3:88:c1"
+UUID = "5cafe9de-e7b0-4e0b-8fb9-2da91a7ae3ed" # from running characteristics in gatttool handle: 0x0008, char properties: 0x10, char value handle: 0x0009, uuid: 5cafe9de-e7b0-4e0b-8fb9-2da91a7ae3ed
+INIT_HANDLE = 0xa
+STANDARD_HANDLE = 0x7
+RECEIVE_HANDLE = 0x9
+MQTT_UNAME = 'user'
+MQTT_PASSWORD = 'password'
+MQTT_IP = '127.0.0.1'
+WEB_HOST_NAME = "127.0.0.1"
+WEBPORT = 5000
+MQTT_ON = True #turn mqtt server on
+WEB_ON = True #turn web server on
+
+command_queue = Queue() #a list of commands we are about to issue to the soundbar
+yam1 = yam() #the current state of the soundbar
+
+

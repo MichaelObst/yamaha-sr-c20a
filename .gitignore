@@ -1,3 +1,6 @@
+# Additional files not included in template
+config.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
