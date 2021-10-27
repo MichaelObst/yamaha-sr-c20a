@@ -4,9 +4,10 @@
 
 import time
 import logging
+from config import DEBUG_LEVEL
 
 ##LOGGING STUFF TO RUN STRAIGHT UP##
-logging.basicConfig(format='%(asctime)s - %(levelname)8s - %(filename)13s - %(threadName)10s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(levelname)8s - %(filename)13s - %(threadName)10s: %(message)s', level=DEBUG_LEVEL)
 
 logger = logging.getLogger('main')
 logger.info('Logging started')

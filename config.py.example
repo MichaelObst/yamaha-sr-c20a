@@ -19,6 +19,7 @@ WEB_HOST_NAME = "127.0.0.1"
 WEBPORT = 5000
 MQTT_ON = True #turn mqtt server on
 WEB_ON = True #turn web server on
+DEBUG_LEVEL = logging.INFO
 
 command_queue = Queue() #a list of commands we are about to issue to the soundbar
 yam1 = yam() #the current state of the soundbar
