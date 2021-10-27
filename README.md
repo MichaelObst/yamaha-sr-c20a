@@ -24,7 +24,7 @@ You can access soundbar status through http://[ip]:[port]/status where ip and po
 
 Read the mqtt.py file for details of the topics that are published and subscribed to and relevant values.
 
-## Credits:
+## Credits
 
 * Author: Michael Obst
 * Inspiration and protocol reverse engineering: Michal Jirku (wejn.org)
