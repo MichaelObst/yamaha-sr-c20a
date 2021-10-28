@@ -4,8 +4,7 @@ This is a python script to interact with the Yamaha SR-C20A soundbar via BLE. It
 
 It creates both a web and mqtt interface for interacting with the soundbar and obtaining its status. The MQTT interface is useful for interacting with the soundbar in Home Assistant which was the original reason I put this together.
 
-All thanks to the excellent work by Michal Jirku who posted an excellect [blog post series](https://wejn.org/2021/04/multi-weekend-project-reversing-yamaha-yas-207-remote-control/) on reverse engineering the YAS-207 soundbar. That one uses bluetooth and a different yamaha app, the underlying protocol turned out to be very similar.
-
+All thanks to the excellent work by Michal Jirku who posted an excellect [blog post series](https://wejn.org/2021/04/multi-weekend-project-reversing-yamaha-yas-207-remote-control/) on reverse engineering the YAS-207 soundbar. That one uses bluetooth and a different yamaha app, the underlying protocol turned out to be very similar, see here for his [project repo](https://github.com/wejn/yamaha-yas-207).
 ## Use
 
 Download and extract the code. Copy config.py.example to config.py and edit the contents. You will need to pip3 install pygatt paho-mqtt flask. Then run main.py.
