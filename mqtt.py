@@ -162,7 +162,7 @@ def publisher(client):
 def main_mqtt(pill2kill):
     while not pill2kill.is_set():
         try:
-            logger.info("MQTT Thread Started")
+            logger.info("MQTT Started")
             mqtt.Client.connected_flag=False
             client = mqtt.Client('soundbar')
             client.on_connect=on_connect
