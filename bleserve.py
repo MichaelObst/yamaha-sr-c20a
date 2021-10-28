@@ -50,12 +50,6 @@ def BleServer(pill2kill):
             adapter.start(reset_on_start=False) #Setting to True requires sudo but may be more stable
             device = adapter.connect(DEVICEADDR, timeout=5.0)
             device.subscribe(UUID, callback=handle_data)
-            #Below did happen on reverse engineering but doesn't seem necessary to establish connection
-            #logger.info("Sending Init")
-            #device.char_write_handle(INIT_HANDLE, bytearray([1,0]), wait_for_response=True)
-            #logger.info("Sending Handshake: " + str(send_command(['handshake'], yam1).hex()))
-            #device.char_write_handle(STANDARD_HANDLE, send_command(['handshake']), wait_for_response=False)
-            ## always receive back ccaa08040001322501031484
             time.sleep(1)
             command = send_command(['request'], yam1) #do an initial Req/Ack
             device.char_write_handle(STANDARD_HANDLE, command, wait_for_response=False)
