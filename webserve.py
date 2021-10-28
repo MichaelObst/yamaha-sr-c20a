@@ -30,6 +30,6 @@ def do_button(button):
     return button + " : " + str(argvol), 201
 
 def start_server(pill2kill):
-    logger.info("Web Server thread starting")
+    logger.info("Web Server starting")
     api.run(host=WEB_HOST_NAME, port=WEBPORT, debug=False, use_reloader=False)
     loger.error("Web Server has encountered an error and is no longer running")
