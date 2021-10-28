@@ -37,7 +37,7 @@ def handle_data(handle, value):
             else:
                 logger.warning("Received unexpected data length: 0x%s" % (value.hex()))
     elif value.hex() == "":
-        logger.warning("Received empty data packet")
+        logger.warning("Received empty data packet, this is expected once on startup")
     else:
         logger.warning("Received data that is not an expected message size: 0x%s" % (value.hex()))
     if (handle != RECEIVE_HANDLE): logger.warning("Bad handle: %s" % str(handle))
