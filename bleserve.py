@@ -1,8 +1,9 @@
 from config import *
-import pygatt
 import time
 import logging
 import traceback
+import asyncio
+import bleak
 
 logger = logging.getLogger(__name__)
 
@@ -42,37 +43,42 @@ def handle_data(handle, value):
         logger.warning("Received data that is not an expected message size: 0x%s" % (value.hex()))
     if (handle != RECEIVE_HANDLE): logger.warning("Bad handle: %s" % str(handle))
 
-def BleServer(pill2kill):
+async def BleServer(pill2kill):
+    logger.info("Starting BLE")
+    adapter = bleak.BleakClient(DEVICEADDR)
+    try:
+        scanner = bleak.BleakScanner() #### DON'T know why but must be scanning at the time we connect.... Weirdness
+        await scanner.start()
+        await adapter.connect()
+        await scanner.stop()
+        await adapter.start_notify(UUID, handle_data)
+        #time.sleep(1)
+        command = send_command(['request'], yam1) #do an initial Req/Ack
+        await adapter.write_gatt_char(STANDARD_HANDLE, command)
+        lastreq = time.time()
+        while not pill2kill.is_set():
+            if command_queue.empty() and (time.time() - lastreq) > 3:
+                logger.info("loop")
+                logger.debug("Send Status Request")
+                command = send_command(['request'], yam1)
+                lastreq = time.time()
+                await adapter.write_gatt_char(STANDARD_HANDLE, command)
+            elif not command_queue.empty():
+                command_from_queue = command_queue.get()
+                command = send_command(command_from_queue, yam1)
+                logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
+                await adapter.write_gatt_char(STANDARD_HANDLE, command)
+                lastreq = 0
+            await asyncio.sleep(0.1)
+    except Exception as e:
+        logger.error('Some BLE Error: ' + str(e))
+        logger.exception(e)
+    finally:
+        logger.warning('Stopping BLE')
+        await adapter.disconnect()
+    logger.warning('BLE stopped')
+
+def start_bleak(pill2kill):
     while not pill2kill.is_set():
-        logger.info("Starting BLE")
-        adapter = pygatt.GATTToolBackend()
-        try:
-            adapter.start(reset_on_start=False) #Setting to True requires sudo but may be more stable
-            device = adapter.connect(DEVICEADDR, timeout=5.0)
-            device.subscribe(UUID, callback=handle_data)
-            time.sleep(1)
-            command = send_command(['request'], yam1) #do an initial Req/Ack
-            device.char_write_handle(STANDARD_HANDLE, command, wait_for_response=False)
-            lastreq = time.time()
-            while not pill2kill.is_set():
-                if command_queue.empty() and (time.time() - lastreq) > 1:
-                    logger.debug("Send Status Request")
-                    command = send_command(['request'], yam1)
-                    lastreq = time.time()
-                    device.char_write_handle(STANDARD_HANDLE, command, wait_for_response=False)
-                elif not command_queue.empty():
-                    command_from_queue = command_queue.get()
-                    command = send_command(command_from_queue, yam1)
-                    logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
-                    device.char_write_handle(STANDARD_HANDLE, command, wait_for_response=False)
-                    lastreq -= 1
-        except Exception as e:
-            logger.error('Some BLE Error: ' + str(e))
-            logger.exception(e)
-        finally:
-            logger.warning('Stopping BLE')
-            adapter.stop()
-        logger.warning('BLE stopped')
-
-
-
+        asyncio.run(BleServer(pill2kill))
+    return

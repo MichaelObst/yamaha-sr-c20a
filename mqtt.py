@@ -62,7 +62,7 @@ def on_message(client, userdata, message):
         else: logger.warning('Bad data in mqtt topic ' + message.topic + ': ' + str(msgdata))
 
     elif message.topic == 'yamaha/volume/switch': 
-        logger.error(['volumeSet', min(max(0, int(msgdata)), 50)])
+        logger.info(['volumeSet', min(max(0, int(msgdata)), 50)])
         if int(msgdata): command_queue.put(['volumeSet', min(max(0, int(msgdata)), 50)])
         else: logger.warning('Bad data in mqtt topic ' + message.topic + ': ' + str(msgdata))
     elif message.topic == 'yamaha/vol_up/switch': 

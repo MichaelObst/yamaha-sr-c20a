@@ -31,7 +31,7 @@ if __name__ == '__main__':
             threadweb.setDaemon(True)
             threadweb.start()
         logger.info('Bluetooth thread starting')
-        threadble = threading.Thread(name='BLE Server', target=bleserve.BleServer, args=(pill2kill, ))
+        threadble = threading.Thread(name='BLE Server', target=bleserve.start_bleak, args=(pill2kill, ))
         threadble.start()
         if MQTT_ON:
             logger.info('MQTT thread starting')
