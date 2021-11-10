@@ -199,6 +199,7 @@ def main_mqtt(pill2kill):
             client.subscribe("yamaha/input/analog")
             while not pill2kill.is_set():
                 publisher(client)
+                time.sleep(0.1)
             client.loop_stop()
             client.disconnect()
         except Exception as e:

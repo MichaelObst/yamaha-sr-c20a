@@ -66,6 +66,7 @@ def BleServer(pill2kill):
                     logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
                     device.char_write_handle(STANDARD_HANDLE, command, wait_for_response=False)
                     lastreq -= 1
+                time.sleep(0.1)
         except Exception as e:
             logger.error('Some BLE Error: ' + str(e))
             logger.exception(e)
