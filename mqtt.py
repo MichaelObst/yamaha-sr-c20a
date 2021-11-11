@@ -3,6 +3,7 @@
 from config import *
 import paho.mqtt.client as mqtt
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def on_message(client, userdata, message):
         else: logger.warning('Bad data in mqtt topic ' + message.topic + ': ' + str(msgdata))
 
     elif message.topic == 'yamaha/volume/switch': 
-        logger.error(['volumeSet', min(max(0, int(msgdata)), 50)])
+        logger.info(['volumeSet', min(max(0, int(msgdata)), 50)])
         if int(msgdata): command_queue.put(['volumeSet', min(max(0, int(msgdata)), 50)])
         else: logger.warning('Bad data in mqtt topic ' + message.topic + ': ' + str(msgdata))
     elif message.topic == 'yamaha/vol_up/switch': 
@@ -115,6 +116,8 @@ def on_message(client, userdata, message):
         else: logger.warning('Bad data in mqtt topic ' + message.topic + ': ' + str(msgdata))
     else:
         logger.warning("Unknown message topic: " + message.topic + " : with data: " + str(msgdata))
+    userdata[0].set() 
+    userdata[0].clear()
 
 def publisher(client):
     if published.power != yam1.power: 
@@ -159,12 +162,13 @@ def publisher(client):
         client.publish("yamaha/led/bright/state", str(yam1.leds_name== "Bright"), retain=True)
         published.leds = yam1.leds
 
-def main_mqtt(pill2kill):
+def main_mqtt(pill2kill, command_added, status_changed):
     while not pill2kill.is_set():
         try:
             logger.info("MQTT Started")
             mqtt.Client.connected_flag=False
-            client = mqtt.Client('soundbar')
+            client_userdata = [command_added]
+            client = mqtt.Client('soundbar', userdata=client_userdata)
             client.on_connect=on_connect
             client.on_message=on_message
             client.username_pw_set(username=MQTT_UNAME,password=MQTT_PASSWORD)
@@ -198,6 +202,7 @@ def main_mqtt(pill2kill):
             client.subscribe("yamaha/input/optical")
             client.subscribe("yamaha/input/analog")
             while not pill2kill.is_set():
+                status_changed.wait()
                 publisher(client)
                 time.sleep(0.1)
             client.loop_stop()
