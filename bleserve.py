@@ -62,7 +62,7 @@ async def BleServer(pill2kill, command_added, status_changed):
         await sendReq(adapter)
         lastreq = time.time()
         while not pill2kill.is_set():
-            command_added.wait(1)
+            command_added.wait(1) #wait on commands so we respond instantly, the one second timeout allows us to check if we need to send a Request to keep alive
             if command_queue.empty() and (time.time() - lastreq) > 3:
                 logger.debug("Send Status Request")
                 lastreq = time.time()
@@ -72,7 +72,7 @@ async def BleServer(pill2kill, command_added, status_changed):
                 command = send_command(command_from_queue, yam1)
                 logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
                 await adapter.write_gatt_char(STANDARD_HANDLE, command)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.05) ## we are waiting a big and doing status reqs as we expect a change now
                 await sendReq(adapter)
                 await asyncio.sleep(0.1)
                 await sendReq(adapter)
