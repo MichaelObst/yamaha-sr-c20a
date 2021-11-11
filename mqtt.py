@@ -204,7 +204,6 @@ def main_mqtt(pill2kill, command_added, status_changed):
             while not pill2kill.is_set():
                 status_changed.wait()
                 publisher(client)
-                time.sleep(0.1)
             client.loop_stop()
             client.disconnect()
         except Exception as e:
