@@ -4,11 +4,12 @@ import logging
 import traceback
 import asyncio
 import bleak
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
 
-def handle_data(handle, value):
+def handle_data(status_changed, handle, value):
     """
     handle -- integer, characteristic read handle the data was received on
     value -- bytearray, the data returned in the notification
@@ -42,8 +43,14 @@ def handle_data(handle, value):
     else:
         logger.warning("Received data that is not an expected message size: 0x%s" % (value.hex()))
     if (handle != RECEIVE_HANDLE): logger.warning("Bad handle: %s" % str(handle))
+    status_changed.set()
+    status_changed.clear()
 
-async def BleServer(pill2kill):
+async def sendReq(adapter):
+    command = send_command(['request'], yam1)
+    await adapter.write_gatt_char(STANDARD_HANDLE, command)
+
+async def BleServer(pill2kill, command_added, status_changed):
     logger.info("Starting BLE")
     adapter = bleak.BleakClient(DEVICEADDR)
     try:
@@ -51,25 +58,25 @@ async def BleServer(pill2kill):
         await scanner.start()
         await adapter.connect()
         await scanner.stop()
-        await adapter.start_notify(UUID, handle_data)
-        #time.sleep(1)
-        command = send_command(['request'], yam1) #do an initial Req/Ack
-        await adapter.write_gatt_char(STANDARD_HANDLE, command)
+        await adapter.start_notify(UUID, partial(handle_data, status_changed))
+        await sendReq(adapter)
         lastreq = time.time()
         while not pill2kill.is_set():
+            command_added.wait(1)
             if command_queue.empty() and (time.time() - lastreq) > 3:
-                logger.info("loop")
                 logger.debug("Send Status Request")
-                command = send_command(['request'], yam1)
                 lastreq = time.time()
-                await adapter.write_gatt_char(STANDARD_HANDLE, command)
+                await sendReq(adapter)
             elif not command_queue.empty():
                 command_from_queue = command_queue.get()
                 command = send_command(command_from_queue, yam1)
                 logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
                 await adapter.write_gatt_char(STANDARD_HANDLE, command)
+                await asyncio.sleep(0.05)
+                await sendReq(adapter)
+                await asyncio.sleep(0.1)
+                await sendReq(adapter)
                 lastreq = 0
-            await asyncio.sleep(0.1)
     except Exception as e:
         logger.error('Some BLE Error: ' + str(e))
         logger.exception(e)
@@ -78,7 +85,7 @@ async def BleServer(pill2kill):
         await adapter.disconnect()
     logger.warning('BLE stopped')
 
-def start_bleak(pill2kill):
+def start_bleak(pill2kill, command_added, status_changed):
     while not pill2kill.is_set():
-        asyncio.run(BleServer(pill2kill))
+        asyncio.run(BleServer(pill2kill, command_added, status_changed))
     return

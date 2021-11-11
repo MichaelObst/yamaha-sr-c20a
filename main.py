@@ -25,17 +25,19 @@ from config import *
 if __name__ == '__main__':
     try:
         pill2kill = threading.Event()
+        command_added = threading.Event()
+        status_changed = threading.Event()
         if WEB_ON:
             logger.info('Web thread starting')
-            threadweb = threading.Thread(name='Web Server', target=webserve.start_server, args=(pill2kill, ))
+            threadweb = threading.Thread(name='Web Server', target=webserve.start_server, args=(pill2kill, command_added))
             threadweb.setDaemon(True)
             threadweb.start()
         logger.info('Bluetooth thread starting')
-        threadble = threading.Thread(name='BLE Server', target=bleserve.start_bleak, args=(pill2kill, ))
+        threadble = threading.Thread(name='BLE Server', target=bleserve.start_bleak, args=(pill2kill, command_added, status_changed, ))
         threadble.start()
         if MQTT_ON:
             logger.info('MQTT thread starting')
-            threadmqtt = threading.Thread(name='MQTT', target=mqtt.main_mqtt, args=(pill2kill, ))
+            threadmqtt = threading.Thread(name='MQTT', target=mqtt.main_mqtt, args=(pill2kill, command_added, status_changed, ))
             threadmqtt.start()
         while True: 
             time.sleep(5) #needed to keep exception catching alive

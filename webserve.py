@@ -21,6 +21,8 @@ def do_button(button):
         try:
             if int(argvol) >= 0 & int(argvol) <= 255:
                 command_queue.put(['volumeSet', int(argvol)])
+                command_added.set()
+                command_added.clear()
             else:
                 logger.warning("Vol set to invalid value")
         except ValueError:
@@ -29,7 +31,7 @@ def do_button(button):
         command_queue.put([button])
     return button + " : " + str(argvol), 201
 
-def start_server(pill2kill):
+def start_server(pill2kill, command_added):
     logger.info("Web Server starting")
     api.run(host=WEB_HOST_NAME, port=WEBPORT, debug=False, use_reloader=False)
     loger.error("Web Server has encountered an error and is no longer running")
