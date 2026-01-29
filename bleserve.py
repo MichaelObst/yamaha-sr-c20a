@@ -42,7 +42,7 @@ def handle_data(status_changed, handle, value):
         logger.warning("Received empty data packet, this is expected once on startup")
     else:
         logger.warning("Received data that is not an expected message size: 0x%s" % (value.hex()))
-    if (handle != RECEIVE_HANDLE): logger.warning("Bad handle: %s" % str(handle))
+    if (handle.handle != RECEIVE_HANDLE): logger.warning("Bad handle: %s" % str(handle))
     status_changed.set()
     status_changed.clear()
 
@@ -52,38 +52,34 @@ async def sendReq(adapter):
 
 async def BleServer(pill2kill, command_added, status_changed):
     logger.info("Starting BLE")
-    adapter = bleak.BleakClient(DEVICEADDR)
-    try:
-        scanner = bleak.BleakScanner() #### DON'T know why but must be scanning at the time we connect.... Weirdness
-        await scanner.start()
-        await adapter.connect()
-        await scanner.stop()
-        await adapter.start_notify(UUID, partial(handle_data, status_changed))
-        await sendReq(adapter)
-        lastreq = time.time()
-        while not pill2kill.is_set():
-            command_added.wait(1) #wait on commands so we respond instantly, the one second timeout allows us to check if we need to send a Request to keep alive
-            if command_queue.empty() and (time.time() - lastreq) > 3:
-                logger.debug("Send Status Request")
-                lastreq = time.time()
-                await sendReq(adapter)
-            elif not command_queue.empty():
-                command_from_queue = command_queue.get()
-                command = send_command(command_from_queue, yam1)
-                logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
-                await adapter.write_gatt_char(STANDARD_HANDLE, command)
-                await asyncio.sleep(0.05) ## we are waiting a big and doing status reqs as we expect a change now
-                await sendReq(adapter)
-                await asyncio.sleep(0.1)
-                await sendReq(adapter)
-                lastreq = 0
-    except Exception as e:
-        logger.error('Some BLE Error: ' + str(e))
-        logger.exception(e)
-    finally:
-        logger.warning('Stopping BLE')
-        await adapter.disconnect()
-    logger.warning('BLE stopped')
+    async with bleak.BleakClient(DEVICEADDR) as adapter:
+        try:
+            await adapter.start_notify(UUID, partial(handle_data, status_changed), bluez={"use_start_notify": True})
+            await sendReq(adapter)
+            lastreq = time.time()
+            while not pill2kill.is_set():
+                command_added.wait(1) #wait on commands so we respond instantly, the one second timeout allows us to check if we need to send a Request to keep alive
+                if command_queue.empty() and (time.time() - lastreq) > 3:
+                    logger.debug("Send Status Request")
+                    lastreq = time.time()
+                    await sendReq(adapter)
+                elif not command_queue.empty():
+                    command_from_queue = command_queue.get()
+                    command = send_command(command_from_queue, yam1)
+                    logger.info("Sent: " + str(command_from_queue) + " 0x" + str(command.hex()))
+                    await adapter.write_gatt_char(STANDARD_HANDLE, command)
+                    await asyncio.sleep(0.05) ## we are waiting a big and doing status reqs as we expect a change now
+                    await sendReq(adapter)
+                    await asyncio.sleep(0.1)
+                    await sendReq(adapter)
+                    lastreq = 0
+        except Exception as e:
+            logger.error('Some BLE Error: ' + str(e))
+            logger.exception(e)
+        finally:
+            logger.warning('Stopping BLE')
+            await adapter.disconnect()
+        logger.warning('BLE stopped')
 
 def start_bleak(pill2kill, command_added, status_changed):
     while not pill2kill.is_set():

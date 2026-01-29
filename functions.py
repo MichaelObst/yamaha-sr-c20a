@@ -53,8 +53,8 @@ def send_command(command, yam1):
         elif command == 'muteToggle':
             if yam1.mute == True: return send_command(['muteOff'], yam1)
             else: return send_command(['muteOn'], yam1)
-        elif command == 'volUp': return send_command(['volumeSet', min(int(yam1.volume) + 5, 60)], yam1)
-        elif command == 'volDown': return send_command(['volumeSet', max(int(yam1.volume) - 5, 0)], yam1)
+        elif command == 'volUp': return send_command(['volumeSet', min(int(yam1.volume) + 2, 60)], yam1)
+        elif command == 'volDown': return send_command(['volumeSet', max(int(yam1.volume) - 2, 0)], yam1)
         elif command == 'standardMode': data = bytearray([0x40,0x7e,0xf1])
         elif command == 'surroundMode': data = bytearray([0x40,0x78,0x50])
         elif command == 'movieMode': data = bytearray([0x40,0x78,0xd9])
